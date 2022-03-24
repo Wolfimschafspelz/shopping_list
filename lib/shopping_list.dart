@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 ///Model class to represent items to shop
 /// @author Lukas Steinmann <lukas.steinmann@gmx.de>
 class ShoppingItem {
+  bool? bought;
   final String name;
   final int amount;
 
-  ShoppingItem(this.name, this.amount);
+  ShoppingItem(this.bought, this.name, this.amount);
 }
 
 class ShoppingListElement extends StatefulWidget {
@@ -19,17 +20,16 @@ class ShoppingListElement extends StatefulWidget {
 }
 
 class _ElementState extends State<ShoppingListElement> {
-  bool? bought = false;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         Checkbox(
-            value: bought,
+            value: widget.item.bought,
             onChanged: (bool? state) {
               setState(() {
-                bought = state;
+                widget.item.bought = state;
               });
             }),
         Text(widget.item.name),
@@ -46,15 +46,12 @@ class ShoppingListView extends StatefulWidget {
 }
 
 class _ShoppingListViewState extends State<ShoppingListView> {
-  List<ShoppingListElement> items = [
-    ShoppingListElement(item: ShoppingItem('Test', 0)),
-    ShoppingListElement(item: ShoppingItem('Test2', 0)),
-    ShoppingListElement(item: ShoppingItem('Test3', 0))
-  ];
+  List<ShoppingListElement> items = [];
+  String name = '';
 
   @override
   Widget build(BuildContext context) {
-    return Column (
+    return Column(
       children: [
         ListView.builder(
           itemCount: items.length,
@@ -64,14 +61,34 @@ class _ShoppingListViewState extends State<ShoppingListView> {
             return items[index];
           },
         ),
-
-        ElevatedButton(onPressed: (){
-          setState(() {
-            ShoppingItem item = ShoppingItem('Newly inserted', 0);
-            ShoppingListElement toInsert = ShoppingListElement(item: item);
-            items.add(toInsert);
-          });
-        }, child: const Text('+')),
+        Row(
+          children: [
+            Flexible(
+              child: TextField(
+                showCursor: true,
+                onChanged: (String value) {
+                  name = value;
+                },
+              ),
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    ShoppingItem item = ShoppingItem(false, name, 0);
+                    ShoppingListElement toInsert = ShoppingListElement(item: item);
+                    items.add(toInsert);
+                  });
+                },
+                child: const Text('+')),
+            ElevatedButton(
+                onPressed: () {
+                  setState((){
+                    items.removeWhere((element) => element.item.bought == true);
+                  });
+                },
+                child: const Text('-')),
+          ],
+        ),
       ],
     );
   }
