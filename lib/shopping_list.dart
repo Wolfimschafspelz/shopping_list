@@ -41,15 +41,21 @@ class ShoppingListView extends StatefulWidget {
 class _ShoppingListViewState extends State<ShoppingListView> {
   List<ShoppingListElement> items = [];
 
-  _ShoppingListViewState() {
-    readItems();
-  }
-
-  readItems() async {
+  Future<File> openJsonFile() async {
     Directory dir = await getApplicationDocumentsDirectory();
     String path = dir.path;
 
-    File jsonFile = File('$path/items.json');
+    return File('$path/items.json');
+  }
+
+  @override
+  void initState() {
+    readItems();
+    super.initState();
+  }
+
+  readItems() async {
+    File jsonFile = await openJsonFile();
 
     String contents = jsonFile.readAsStringSync(encoding: utf8);
     var jsonResponse = jsonDecode(contents);
@@ -62,10 +68,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
   }
 
   void saveList() async {
-    Directory dir = await getApplicationDocumentsDirectory();
-    String path = dir.path;
-
-    File jsonFile = File('$path/items.json');
+    File jsonFile = await openJsonFile();
 
     List<Map<String, dynamic>> toEncode = [];
     for (var item in items) {
