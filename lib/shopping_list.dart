@@ -53,16 +53,27 @@ class _ShoppingListViewState extends State<ShoppingListView> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ListView.builder(
-          itemCount: items.length,
-          shrinkWrap: true,
-          scrollDirection: Axis.vertical,
-          itemBuilder: (BuildContext context, index) {
-            return items[index];
-          },
+        Flexible(
+          child: ListView.builder(
+            itemCount: items.length,
+            shrinkWrap: true,
+            scrollDirection: Axis.vertical,
+            itemBuilder: (BuildContext context, index) {
+              return items[index];
+            },
+          ),
         ),
         Row(
           children: [
+            ElevatedButton(
+                onPressed: () {
+                  setState((){
+                    items.removeWhere((element) => element.item.bought == true);
+                  });
+                },
+                child: const Text('-')
+            ),
+
             Flexible(
               child: TextField(
                 showCursor: true,
@@ -71,8 +82,13 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                 },
               ),
             ),
+
             ElevatedButton(
                 onPressed: () {
+                  if (name == '') {
+                    return;
+                  }
+
                   setState(() {
                     ShoppingItem item = ShoppingItem(false, name, 0);
                     ShoppingListElement toInsert = ShoppingListElement(item: item);
@@ -80,13 +96,6 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                   });
                 },
                 child: const Text('+')),
-            ElevatedButton(
-                onPressed: () {
-                  setState((){
-                    items.removeWhere((element) => element.item.bought == true);
-                  });
-                },
-                child: const Text('-')),
           ],
         ),
       ],

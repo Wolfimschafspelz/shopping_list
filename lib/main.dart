@@ -9,10 +9,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Shopping List',
       home: Scaffold(
-        body: Center(
+        appBar: AppBar(
+          title: const Text('My Shopping list'),
+        ),
+
+        body: const Center(
           child: ShoppingListView(),
         ),
       ),
