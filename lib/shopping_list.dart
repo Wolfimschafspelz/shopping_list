@@ -51,21 +51,29 @@ class _ShoppingListViewState extends State<ShoppingListView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        Flexible(
-          child: ListView.builder(
-            itemCount: items.length,
-            shrinkWrap: true,
-            scrollDirection: Axis.vertical,
-            itemBuilder: (BuildContext context, index) {
-              return items[index];
-            },
+        Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints.expand(),
+            child: ListView.builder(
+              itemCount: items.length,
+              shrinkWrap: true,
+              scrollDirection: Axis.vertical,
+              itemBuilder: (BuildContext context, index) {
+                return items[index];
+              },
+            ),
           ),
         ),
-        Row(
-          children: [
-            ElevatedButton(
+
+
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Row(
+            children: [
+              ElevatedButton(
                 onPressed: () {
                   setState((){
                     items.removeWhere((element) => element.item.bought == true);
@@ -96,7 +104,8 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                   });
                 },
                 child: const Text('+')),
-          ],
+            ],
+          ),
         ),
       ],
     );
