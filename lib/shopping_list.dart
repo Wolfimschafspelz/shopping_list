@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
-
-///Model class to represent items to shop
-/// @author Lukas Steinmann <lukas.steinmann@gmx.de>
-class ShoppingItem {
-  bool? bought;
-  final String name;
-  final int amount;
-
-  ShoppingItem(this.bought, this.name, this.amount);
-}
+import 'shopping_item.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'dart:convert';
 
 class ShoppingListElement extends StatefulWidget {
   final ShoppingItem item;
@@ -20,7 +14,6 @@ class ShoppingListElement extends StatefulWidget {
 }
 
 class _ElementState extends State<ShoppingListElement> {
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -47,6 +40,40 @@ class ShoppingListView extends StatefulWidget {
 
 class _ShoppingListViewState extends State<ShoppingListView> {
   List<ShoppingListElement> items = [];
+
+  _ShoppingListViewState() {
+    readItems();
+  }
+
+  readItems() async {
+    Directory dir = await getApplicationDocumentsDirectory();
+    String path = dir.path;
+
+    File jsonFile = File('$path/items.json');
+
+    String contents = jsonFile.readAsStringSync(encoding: utf8);
+    var jsonResponse = jsonDecode(contents);
+
+    for (var elem in jsonResponse) {
+      ShoppingItem item = ShoppingItem(elem['bought'], elem['name'], elem['amount']);
+      ShoppingListElement element = ShoppingListElement(item: item);
+      items.add(element);
+    }
+  }
+
+  void saveList() async {
+    Directory dir = await getApplicationDocumentsDirectory();
+    String path = dir.path;
+
+    File jsonFile = File('$path/items.json');
+
+    List<Map<String, dynamic>> toEncode = [];
+    for (var item in items) {
+      toEncode.add(item.item.toJson());
+    }
+    jsonFile.writeAsString(json.encode(toEncode));
+  }
+
   String name = '';
 
   @override
@@ -77,6 +104,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                 onPressed: () {
                   setState((){
                     items.removeWhere((element) => element.item.bought == true);
+                    saveList();
                   });
                 },
                 child: const Text('-')
@@ -101,6 +129,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                     ShoppingItem item = ShoppingItem(false, name, 0);
                     ShoppingListElement toInsert = ShoppingListElement(item: item);
                     items.add(toInsert);
+                    saveList();
                   });
                 },
                 child: const Text('+')),
