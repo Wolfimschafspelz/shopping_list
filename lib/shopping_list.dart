@@ -4,16 +4,16 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:convert';
 
-class ShoppingListElement extends StatefulWidget {
+class ShoppingItemView extends StatefulWidget {
   final ShoppingItem item;
 
-  const ShoppingListElement({Key? key, required this.item}) : super(key: key);
+  const ShoppingItemView({Key? key, required this.item}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _ElementState();
+  State<StatefulWidget> createState() => _ItemViewState();
 }
 
-class _ElementState extends State<ShoppingListElement> {
+class _ItemViewState extends State<ShoppingItemView> {
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -39,8 +39,9 @@ class ShoppingListView extends StatefulWidget {
 }
 
 class _ShoppingListViewState extends State<ShoppingListView> {
-  List<ShoppingListElement> items = [];
+  Future<File>? jsonFile;
 
+  List<ShoppingItem> items = [];
   Future<File> openJsonFile() async {
     Directory dir = await getApplicationDocumentsDirectory();
     String path = dir.path;
@@ -50,7 +51,9 @@ class _ShoppingListViewState extends State<ShoppingListView> {
 
   @override
   void initState() {
-    readItems();
+    setState(() {
+      readItems();
+    });
     super.initState();
   }
 
@@ -62,8 +65,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
 
     for (var elem in jsonResponse) {
       ShoppingItem item = ShoppingItem(elem['bought'], elem['name'], elem['amount']);
-      ShoppingListElement element = ShoppingListElement(item: item);
-      items.add(element);
+      items.add(item);
     }
   }
 
@@ -72,7 +74,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
 
     List<Map<String, dynamic>> toEncode = [];
     for (var item in items) {
-      toEncode.add(item.item.toJson());
+      toEncode.add(item.toJson());
     }
     jsonFile.writeAsString(json.encode(toEncode));
   }
@@ -92,12 +94,11 @@ class _ShoppingListViewState extends State<ShoppingListView> {
               shrinkWrap: true,
               scrollDirection: Axis.vertical,
               itemBuilder: (BuildContext context, index) {
-                return items[index];
+                return ShoppingItemView(item: items[index]);
               },
             ),
           ),
         ),
-
 
         Align(
           alignment: Alignment.bottomCenter,
@@ -106,7 +107,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
               ElevatedButton(
                 onPressed: () {
                   setState((){
-                    items.removeWhere((element) => element.item.bought == true);
+                    items.removeWhere((element) => element.bought == true);
                     saveList();
                   });
                 },
@@ -129,8 +130,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                   }
 
                   setState(() {
-                    ShoppingItem item = ShoppingItem(false, name, 0);
-                    ShoppingListElement toInsert = ShoppingListElement(item: item);
+                    ShoppingItem toInsert = ShoppingItem(false, name, 0);
                     items.add(toInsert);
                     saveList();
                   });
