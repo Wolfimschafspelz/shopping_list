@@ -39,9 +39,7 @@ class ShoppingListView extends StatefulWidget {
 }
 
 class _ShoppingListViewState extends State<ShoppingListView> {
-  Future<File>? jsonFile;
 
-  List<ShoppingItem> items = [];
   Future<File> openJsonFile() async {
     Directory dir = await getApplicationDocumentsDirectory();
     String path = dir.path;
@@ -49,97 +47,108 @@ class _ShoppingListViewState extends State<ShoppingListView> {
     return File('$path/items.json');
   }
 
-  @override
-  void initState() {
-    setState(() {
-      readItems();
-    });
-    super.initState();
-  }
-
-  readItems() async {
+  Future<List<ShoppingItem>> readJson() async {
     File jsonFile = await openJsonFile();
+    String contents = await jsonFile.readAsString(encoding: utf8);
+    var jsonResponse = await jsonDecode(contents);
 
-    String contents = jsonFile.readAsStringSync(encoding: utf8);
-    var jsonResponse = jsonDecode(contents);
+    List<ShoppingItem> result = [];
 
     for (var elem in jsonResponse) {
-      ShoppingItem item = ShoppingItem(elem['bought'], elem['name'], elem['amount']);
-      items.add(item);
+      ShoppingItem item = ShoppingItem.fromJson(elem);
+      result.add(item);
     }
+
+    return result;
   }
 
-  void saveList() async {
+  void saveList(AsyncSnapshot snapshot) async {
     File jsonFile = await openJsonFile();
-
     List<Map<String, dynamic>> toEncode = [];
-    for (var item in items) {
+    for (var item in snapshot.data) {
       toEncode.add(item.toJson());
     }
     jsonFile.writeAsString(json.encode(toEncode));
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   String name = '';
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints.expand(),
-            child: ListView.builder(
-              itemCount: items.length,
-              shrinkWrap: true,
-              scrollDirection: Axis.vertical,
-              itemBuilder: (BuildContext context, index) {
-                return ShoppingItemView(item: items[index]);
-              },
-            ),
-          ),
-        ),
-
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Row(
+    return FutureBuilder(
+      future: readJson(),
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        if (snapshot.hasData) {
+          return Stack(
             children: [
-              ElevatedButton(
-                onPressed: () {
-                  setState((){
-                    items.removeWhere((element) => element.bought == true);
-                    saveList();
-                  });
-                },
-                child: const Text('-')
-            ),
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints.expand(),
+                    child: ListView.builder(
+                      itemCount: snapshot.data.length,
+                      shrinkWrap: true,
+                      scrollDirection: Axis.vertical,
+                      itemBuilder: (BuildContext context, index) {
+                        return ShoppingItemView(item: snapshot.data[index]);
+                      },
+                    ),
+                  ),
+                ),
 
-            Flexible(
-              child: TextField(
-                showCursor: true,
-                onChanged: (String value) {
-                  name = value;
-                },
-              ),
-            ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Row(
+                    children: [
+                      ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              snapshot.data.removeWhere((element) =>
+                              element.bought == true);
+                              saveList(snapshot);
+                            });
+                          },
+                          child: const Text('-')
+                      ),
 
-            ElevatedButton(
-                onPressed: () {
-                  if (name == '') {
-                    return;
-                  }
+                      Flexible(
+                        child: TextField(
+                          showCursor: true,
+                          onChanged: (String value) {
+                            name = value;
+                          },
+                        ),
+                      ),
 
-                  setState(() {
-                    ShoppingItem toInsert = ShoppingItem(false, name, 0);
-                    items.add(toInsert);
-                    saveList();
-                  });
-                },
-                child: const Text('+')),
-            ],
-          ),
-        ),
-      ],
+                      ElevatedButton(
+                          onPressed: () {
+                            if (name == '') {
+                              return;
+                            }
+
+                            setState(() {
+                              ShoppingItem toInsert = ShoppingItem(
+                                  false, name, 0);
+                              snapshot.data.add(toInsert);
+                              saveList(snapshot);
+                            });
+                          },
+                          child: const Text('+')),
+                    ],
+                  ),
+                ),
+              ],
+          );
+        }
+        else {
+          return const Text('Loading...');
+        }
+      },
     );
   }
 }
