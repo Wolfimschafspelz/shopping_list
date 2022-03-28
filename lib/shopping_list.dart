@@ -73,11 +73,6 @@ class _ShoppingListViewState extends State<ShoppingListView> {
     jsonFile.writeAsString(json.encode(toEncode));
   }
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
   String name = '';
 
   @override
@@ -116,8 +111,8 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                           setState(() {
                             snapshot.data.removeWhere((element) =>
                             element.bought == true);
-                            saveList(snapshot);
                           });
+                          saveList(snapshot);
                         },
                         child: const Text('-')
                       ),
@@ -130,6 +125,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                             isDense: true,
                             labelText: 'item name',
                           ),
+
                           onChanged: (String value) {
                             name = value;
                           },
@@ -150,8 +146,8 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                             ShoppingItem toInsert = ShoppingItem(
                                 false, name, null);
                             snapshot.data.add(toInsert);
-                            saveList(snapshot);
                           });
+                          saveList(snapshot);
                         },
 
                         child: const Text('+')),
