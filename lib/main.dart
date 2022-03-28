@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Shopping List',
-      home: ShoppingListPage(name: 'Test'),
+      home: ShoppingListPage(name: 'Test2',),
     );
   }
 }

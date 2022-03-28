@@ -3,7 +3,6 @@ import 'shopping_list.dart';
 
 class ShoppingListPage extends StatelessWidget {
   final String name;
-
   const ShoppingListPage({Key? key, required this.name}) : super(key: key);
 
   @override
@@ -13,8 +12,8 @@ class ShoppingListPage extends StatelessWidget {
         title: Text(name),
       ),
 
-      body: const Center(
-        child: ShoppingListView(),
+      body: Center(
+        child: ShoppingListView(listName: name),
       ),
     );
   }
