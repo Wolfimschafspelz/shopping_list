@@ -3,7 +3,7 @@
 class ShoppingItem {
   bool? bought;
   final String name;
-  final int amount;
+  final int? amount;
 
   ShoppingItem(this.bought, this.name, this.amount);
 
@@ -11,7 +11,7 @@ class ShoppingItem {
   {
     final bought = data['bought'] as bool?;
     final name = data['name'] as String;
-    final amount = data['amount'] as int;
+    final amount = data['amount'] as int?;
     return ShoppingItem(bought, name, amount);
   }
 
