@@ -34,6 +34,7 @@ class _ItemViewState extends State<ShoppingItemView> {
 }
 
 class ShoppingListView extends StatefulWidget {
+
   const ShoppingListView({Key? key}) : super(key: key);
 
   @override
