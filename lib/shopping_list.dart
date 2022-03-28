@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shopping_list/loading_screen.dart';
 import 'shopping_item.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
@@ -25,6 +26,7 @@ class _ItemViewState extends State<ShoppingItemView> {
                 widget.item.bought = state;
               });
             }),
+
         Text(widget.item.name),
       ],
     );
@@ -71,11 +73,6 @@ class _ShoppingListViewState extends State<ShoppingListView> {
     jsonFile.writeAsString(json.encode(toEncode));
   }
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
   String name = '';
 
   @override
@@ -106,19 +103,29 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                   child: Row(
                     children: [
                       ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              snapshot.data.removeWhere((element) =>
-                              element.bought == true);
-                              saveList(snapshot);
-                            });
-                          },
-                          child: const Text('-')
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                        ),
+
+                        onPressed: () {
+                          setState(() {
+                            snapshot.data.removeWhere((element) =>
+                            element.bought == true);
+                          });
+                          saveList(snapshot);
+                        },
+                        child: const Text('-')
                       ),
 
                       Flexible(
                         child: TextField(
                           showCursor: true,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                            labelText: 'item name',
+                          ),
+
                           onChanged: (String value) {
                             name = value;
                           },
@@ -126,19 +133,24 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                       ),
 
                       ElevatedButton(
-                          onPressed: () {
-                            if (name == '') {
-                              return;
-                            }
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                        ),
 
-                            setState(() {
-                              ShoppingItem toInsert = ShoppingItem(
-                                  false, name, 0);
-                              snapshot.data.add(toInsert);
-                              saveList(snapshot);
-                            });
-                          },
-                          child: const Text('+')),
+                        onPressed: () {
+                          if (name == '') {
+                            return;
+                          }
+
+                          setState(() {
+                            ShoppingItem toInsert = ShoppingItem(
+                                false, name, null);
+                            snapshot.data.add(toInsert);
+                          });
+                          saveList(snapshot);
+                        },
+
+                        child: const Text('+')),
                     ],
                   ),
                 ),
@@ -146,7 +158,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
           );
         }
         else {
-          return const Text('Loading...');
+          return const LoadingScreen();
         }
       },
     );
