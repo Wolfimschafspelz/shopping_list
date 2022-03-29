@@ -3,7 +3,7 @@ class ShoppingListModel {
 
   ShoppingListModel(this.name);
 
-  factory ShoppingListModel.toJson(Map<String, dynamic> data) {
+  factory ShoppingListModel.fromJson(Map<String, dynamic> data) {
     final name = data['name'] as String;
 
     return ShoppingListModel(name);

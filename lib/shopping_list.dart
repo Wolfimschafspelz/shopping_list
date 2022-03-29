@@ -53,31 +53,27 @@ class _ShoppingListViewState extends State<ShoppingListView> {
     return File('$path/$fileName.json').create(recursive: true);
   }
 
-  Future<List<ShoppingItem>> readJson() async {
-    File jsonFile = await openJsonFile();
-
-    String contents = await jsonFile.readAsString(encoding: utf8);
-
-    if (contents.isEmpty) {
+  List<ShoppingItem> getItems(String jsonContents) {
+    if (jsonContents.isEmpty) {
       return [];
     }
 
-    var jsonResponse = await jsonDecode(contents);
+    final parsed = jsonDecode(jsonContents).cast<Map<String, dynamic>>();
 
-    List<ShoppingItem> result = [];
-
-    for (var elem in jsonResponse) {
-      ShoppingItem item = ShoppingItem.fromJson(elem);
-      result.add(item);
-    }
-
-    return result;
+    return parsed.map<ShoppingItem>((json) => ShoppingItem.fromJson(json)).toList();
   }
 
-  void saveList(AsyncSnapshot snapshot) async {
+  Future<List<ShoppingItem>> readJson() async {
+    File jsonFile = await openJsonFile();
+    String contents = await jsonFile.readAsString(encoding: utf8);
+
+    return getItems(contents);
+  }
+
+  void saveList(List<ShoppingItem> items) async {
     File jsonFile = await openJsonFile();
     List<Map<String, dynamic>> toEncode = [];
-    for (var item in snapshot.data) {
+    for (var item in items) {
       toEncode.add(item.toJson());
     }
     jsonFile.writeAsString(json.encode(toEncode));
@@ -122,7 +118,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                             snapshot.data.removeWhere((element) =>
                             element.bought == true);
                           });
-                          saveList(snapshot);
+                          saveList(snapshot.data);
                         },
                         child: const Text('-')
                       ),
@@ -157,7 +153,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                                 false, itemName, null);
                             snapshot.data.add(toInsert);
                           });
-                          saveList(snapshot);
+                          saveList(snapshot.data);
                         },
 
                         child: const Text('+')),
