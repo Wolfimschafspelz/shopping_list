@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shopping_list/shopping_list.dart';
+import 'package:shopping_list/home_screen.dart';
 
 void main() => runApp(const MyApp());
 
@@ -9,17 +9,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Shopping List',
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('My Shopping list'),
-        ),
-
-        body: const Center(
-          child: ShoppingListView(),
-        ),
-      ),
+      home: HomeScreen(),
     );
   }
 }
