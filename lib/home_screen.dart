@@ -61,6 +61,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return getItems(contents);
   }
 
+  void saveItem(AsyncSnapshot snapshot, ShoppingListModel item) async {
+    File jsonFile = await openJsonFile();
+
+    snapshot.data.add(item);
+
+    List<Map<String, dynamic>> toEncode = [];
+    for (var i in snapshot.data) {
+      toEncode.add(i.toJson());
+    }
+    jsonFile.writeAsString(json.encode(toEncode));
+  }
+
   List<Widget> drawerContent(List<ShoppingListModel> lists) {
     List<Widget> result = [];
 
@@ -103,11 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: const Icon(Icons.add),
                     tooltip: 'Add new list',
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute<void>(
-                        builder: (BuildContext context) {
-                          return const AddListForm();
-                        },
-                      ));
+                      _awaitFormResult(context, snapshot);
                     },
                   ),
                 ],
@@ -117,11 +125,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: EdgeInsets.zero,
                   children: drawerContent(snapshot.data!),
                 ),
-              ),
-              floatingActionButton: FloatingActionButton(
-                child: const Icon(Icons.refresh),
-                tooltip: 'refresh list',
-                onPressed: () => setState(() {}),
               ),
             );
           }
@@ -134,5 +137,15 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         }
     );
+  }
+
+  void _awaitFormResult(BuildContext context, AsyncSnapshot snapshot) async {
+    final result = await Navigator.push(context, MaterialPageRoute(
+      builder: (context) => const AddListForm())
+    );
+
+    setState(() {
+      saveItem(snapshot, result);
+    });
   }
 }

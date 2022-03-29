@@ -1,8 +1,4 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shopping_list/list_model.dart';
 
 class AddListForm extends StatefulWidget {
@@ -17,33 +13,6 @@ class _FormState extends State<AddListForm> {
   final _formKey = GlobalKey<FormState>();
   final textController = TextEditingController();
   String? listName;
-
-  Future<File> openJsonFile() async {
-    Directory dir = await getApplicationDocumentsDirectory();
-    String path = dir.path;
-
-    return File('$path/shopping_lists.json').create(recursive: true);
-  }
-
-  void saveItem(ShoppingListModel item) async {
-    File jsonFile = await openJsonFile();
-
-    String contents = await jsonFile.readAsString(encoding: utf8);
-    final items = (contents.isEmpty)
-        ? []
-        : jsonDecode(contents)
-            .cast<Map<String, dynamic>>()
-            .map<ShoppingListModel>((json) => ShoppingListModel.fromJson(json))
-            .toList();
-
-    items.add(item);
-
-    List<Map<String, dynamic>> toEncode = [];
-    for (var i in items) {
-      toEncode.add(i.toJson());
-    }
-    jsonFile.writeAsString(json.encode(toEncode));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,13 +46,11 @@ class _FormState extends State<AddListForm> {
                 if (_formKey.currentState!.validate()) {
                   ShoppingListModel toInsert = ShoppingListModel(listName!);
 
-                  saveItem(toInsert);
-
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('added ' + listName!)),
                   );
 
-                  Navigator.pop(context);
+                  Navigator.pop(context, toInsert);
                 }
               },
               child: const Text('Submit'),
