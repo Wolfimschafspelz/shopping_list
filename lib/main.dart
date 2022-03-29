@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shopping_list/list_page.dart';
+import 'package:shopping_list/home_screen.dart';
 
 void main() => runApp(const MyApp());
 
@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Shopping List',
-      home: ShoppingListPage(name: 'Test2',),
+      home: HomeScreen(),
     );
   }
 }

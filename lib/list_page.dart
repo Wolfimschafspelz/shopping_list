@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shopping_list/selection_screen.dart';
 import 'package:shopping_list/shopping_list.dart';
 
 class ShoppingListPage extends StatefulWidget {
@@ -17,8 +16,6 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
       appBar: AppBar(
         title: Text(widget.name),
       ),
-
-      drawer: const SelectionScreen(),
 
       body: Center(
         child: ShoppingListView(listName: widget.name),
