@@ -118,6 +118,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: drawerContent(snapshot.data!),
                 ),
               ),
+              floatingActionButton: FloatingActionButton(
+                child: const Icon(Icons.refresh),
+                tooltip: 'refresh list',
+                onPressed: () => setState(() {}),
+              ),
             );
           }
           else {

@@ -13,6 +13,7 @@ class AddListForm extends StatefulWidget {
 }
 
 class _FormState extends State<AddListForm> {
+  bool changed = false;
   final _formKey = GlobalKey<FormState>();
   final textController = TextEditingController();
   String? listName;
@@ -79,8 +80,10 @@ class _FormState extends State<AddListForm> {
                   saveItem(toInsert);
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('adding ' + listName!)),
+                    SnackBar(content: Text('added ' + listName!)),
                   );
+
+                  Navigator.pop(context);
                 }
               },
               child: const Text('Submit'),
