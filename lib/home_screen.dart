@@ -116,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
             IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
             IconButton(onPressed: () {
               setState(() {
-
+                deleteList(item, snapshot);
                 saveItem(snapshot);
               });
             }, icon: const Icon(Icons.delete)),
@@ -184,5 +184,15 @@ class _HomeScreenState extends State<HomeScreen> {
       snapshot.data.add(result);
       saveItem(snapshot);
     });
+  }
+
+  void deleteList(ShoppingListModel item, AsyncSnapshot snapshot) async {
+    Directory dir = await getApplicationDocumentsDirectory();
+    String path = dir.path;
+    File jsonFile = File('$path/' + item.name + '.json');
+    if(jsonFile.existsSync()) {
+      jsonFile.deleteSync();
+    }
+    snapshot.data.remove(item);
   }
 }
