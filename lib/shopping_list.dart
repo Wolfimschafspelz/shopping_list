@@ -34,7 +34,9 @@ class _ItemViewState extends State<ShoppingItemView> {
 }
 
 class ShoppingListView extends StatefulWidget {
-  const ShoppingListView({Key? key}) : super(key: key);
+  final String listName;
+
+  const ShoppingListView({Key? key, required this.listName}) : super(key: key);
 
   @override
   State<ShoppingListView> createState() => _ShoppingListViewState();
@@ -46,34 +48,38 @@ class _ShoppingListViewState extends State<ShoppingListView> {
     Directory dir = await getApplicationDocumentsDirectory();
     String path = dir.path;
 
-    return File('$path/items.json');
+    String fileName = widget.listName.replaceAll(RegExp('\\s+'), '_');
+
+    return File('$path/$fileName.json').create(recursive: true);
+  }
+
+  List<ShoppingItem> getItems(String jsonContents) {
+    if (jsonContents.isEmpty) {
+      return [];
+    }
+
+    final parsed = jsonDecode(jsonContents).cast<Map<String, dynamic>>();
+
+    return parsed.map<ShoppingItem>((json) => ShoppingItem.fromJson(json)).toList();
   }
 
   Future<List<ShoppingItem>> readJson() async {
     File jsonFile = await openJsonFile();
     String contents = await jsonFile.readAsString(encoding: utf8);
-    var jsonResponse = await jsonDecode(contents);
 
-    List<ShoppingItem> result = [];
-
-    for (var elem in jsonResponse) {
-      ShoppingItem item = ShoppingItem.fromJson(elem);
-      result.add(item);
-    }
-
-    return result;
+    return getItems(contents);
   }
 
-  void saveList(AsyncSnapshot snapshot) async {
+  void saveList(List<ShoppingItem> items) async {
     File jsonFile = await openJsonFile();
     List<Map<String, dynamic>> toEncode = [];
-    for (var item in snapshot.data) {
+    for (var item in items) {
       toEncode.add(item.toJson());
     }
     jsonFile.writeAsString(json.encode(toEncode));
   }
 
-  String name = '';
+  String itemName = '';
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +118,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                             snapshot.data.removeWhere((element) =>
                             element.bought == true);
                           });
-                          saveList(snapshot);
+                          saveList(snapshot.data);
                         },
                         child: const Text('-')
                       ),
@@ -127,7 +133,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                           ),
 
                           onChanged: (String value) {
-                            name = value;
+                            itemName = value;
                           },
                         ),
                       ),
@@ -138,16 +144,16 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                         ),
 
                         onPressed: () {
-                          if (name == '') {
+                          if (itemName == '') {
                             return;
                           }
 
                           setState(() {
                             ShoppingItem toInsert = ShoppingItem(
-                                false, name, null);
+                                false, itemName, null);
                             snapshot.data.add(toInsert);
                           });
-                          saveList(snapshot);
+                          saveList(snapshot.data);
                         },
 
                         child: const Text('+')),
