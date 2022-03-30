@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shopping_list/add_list_form.dart';
+import 'package:shopping_list/edit_list_form.dart';
 import 'package:shopping_list/list_model.dart';
 import 'package:shopping_list/list_page.dart';
 import 'package:shopping_list/loading_screen.dart';
@@ -113,7 +114,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           trailingButtons: [
-            IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
+            IconButton(onPressed: () {
+              _awaitRenameFormResult(context, snapshot, item);
+            }, icon: const Icon(Icons.edit)),
+
             IconButton(onPressed: () {
               setState(() {
                 deleteList(item, snapshot);
@@ -148,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: const Icon(Icons.add),
                     tooltip: 'Add new list',
                     onPressed: () {
-                      _awaitFormResult(context, snapshot);
+                      _awaitAddFormResult(context, snapshot);
                     },
                   ),
                 ],
@@ -170,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
   }
 
-  void _awaitFormResult(BuildContext context, AsyncSnapshot snapshot) async {
+  void _awaitAddFormResult(BuildContext context, AsyncSnapshot snapshot) async {
     final result = await Navigator.push(
         context, MaterialPageRoute(builder: (context) => AddListForm(items: snapshot.data)));
 
@@ -185,11 +189,33 @@ class _HomeScreenState extends State<HomeScreen> {
       saveItem(snapshot);
     });
   }
+  
+  void _awaitRenameFormResult(BuildContext context, AsyncSnapshot snapshot, ShoppingListModel item) async {
+    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => EditListForm(items: snapshot.data)));
+    setState(() {
+      renameList(result, item, snapshot);
+      saveItem(snapshot);
+    });
+  }
+
+  void renameList(String name, ShoppingListModel item, AsyncSnapshot snapshot) async {
+    Directory dir = await getApplicationDocumentsDirectory();
+    String path = dir.path;
+    String fileName = item.name.replaceAll(RegExp('\\s+'), '_');
+    File jsonFile = File('$path/' + fileName + '.json');
+    if(jsonFile.existsSync()) {
+      fileName = name.replaceAll(RegExp('\\s+'), '_');
+      jsonFile.rename('$path/' + fileName + '.json');
+    }
+    snapshot.data.remove(item);
+    snapshot.data.add(ShoppingListModel(name));
+  }
 
   void deleteList(ShoppingListModel item, AsyncSnapshot snapshot) async {
     Directory dir = await getApplicationDocumentsDirectory();
     String path = dir.path;
-    File jsonFile = File('$path/' + item.name + '.json');
+    String fileName = item.name.replaceAll(RegExp('\\s+'), '_');
+    File jsonFile = File('$path/' + fileName + '.json');
     if(jsonFile.existsSync()) {
       jsonFile.deleteSync();
     }
