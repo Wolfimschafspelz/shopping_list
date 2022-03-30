@@ -13,14 +13,27 @@ class ShoppingListTile extends StatelessWidget {
   final String title;
   final Icon? icon;
   final Widget route;
+  final List<Widget>? trailingButtons;
 
-  const ShoppingListTile({Key? key, required this.title, required this.route, this.icon}) : super(key: key);
+  const ShoppingListTile(
+      {Key? key,
+      required this.title,
+      required this.route,
+      this.icon,
+      this.trailingButtons})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: icon,
       title: Text(title),
+      trailing: (trailingButtons != null)
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: trailingButtons!,
+            )
+          : null,
       onTap: () {
         Navigator.pop(context);
         Navigator.push(context, MaterialPageRoute(builder: (context) => route));
@@ -51,7 +64,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final parsed = jsonDecode(jsonContents).cast<Map<String, dynamic>>();
 
-    return parsed.map<ShoppingListModel>((json) => ShoppingListModel.fromJson(json)).toList();
+    return parsed
+        .map<ShoppingListModel>((json) => ShoppingListModel.fromJson(json))
+        .toList();
   }
 
   Future<List<ShoppingListModel>> readJson() async {
@@ -61,10 +76,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return getItems(contents);
   }
 
-  void saveItem(AsyncSnapshot snapshot, ShoppingListModel item) async {
+  void saveItem(AsyncSnapshot snapshot) async {
     File jsonFile = await openJsonFile();
-
-    snapshot.data.add(item);
 
     List<Map<String, dynamic>> toEncode = [];
     for (var i in snapshot.data) {
@@ -73,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
     jsonFile.writeAsString(json.encode(toEncode));
   }
 
-  List<Widget> drawerContent(List<ShoppingListModel> lists) {
+  List<Widget> drawerContent(AsyncSnapshot snapshot) {
     List<Widget> result = [];
 
     result.add(
@@ -83,7 +96,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Text(
           'My shopping list',
-
           style: TextStyle(
             color: Colors.white,
             fontSize: 24,
@@ -92,11 +104,32 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
 
-    for(ShoppingListModel item in lists) {
-      result.add(ShoppingListTile(title: item.name, route: ShoppingListPage(name: item.name,)));
+    for (ShoppingListModel item in snapshot.data) {
+      result.add(
+        ShoppingListTile(
+          title: item.name,
+          route: ShoppingListPage(
+            name: item.name,
+          ),
+
+          trailingButtons: [
+            IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
+            IconButton(onPressed: () {
+              setState(() {
+
+                saveItem(snapshot);
+              });
+            }, icon: const Icon(Icons.delete)),
+          ],
+        )
+      );
     }
 
-    result.add(const ShoppingListTile(title: 'Settings', route: SettingsView(), icon: Icon(Icons.settings),));
+    result.add(const ShoppingListTile(
+      title: 'Settings',
+      route: SettingsView(),
+      icon: Icon(Icons.settings),
+    ));
 
     return result;
   }
@@ -123,29 +156,33 @@ class _HomeScreenState extends State<HomeScreen> {
               drawer: Drawer(
                 child: ListView(
                   padding: EdgeInsets.zero,
-                  children: drawerContent(snapshot.data!),
+                  children: drawerContent(snapshot),
                 ),
               ),
             );
-          }
-          else {
+          } else {
             return const Scaffold(
               body: Center(
                 child: LoadingScreen(),
               ),
             );
           }
-        }
-    );
+        });
   }
 
   void _awaitFormResult(BuildContext context, AsyncSnapshot snapshot) async {
-    final result = await Navigator.push(context, MaterialPageRoute(
-      builder: (context) => const AddListForm())
-    );
+    final result = await Navigator.push(
+        context, MaterialPageRoute(builder: (context) => AddListForm(items: snapshot.data)));
+
+    for (ShoppingListModel item in snapshot.data) {
+      if (item.name == result.name)  {
+        return;
+      }
+    }
 
     setState(() {
-      saveItem(snapshot, result);
+      snapshot.data.add(result);
+      saveItem(snapshot);
     });
   }
 }

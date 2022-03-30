@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shopping_list/list_model.dart';
 
 class AddListForm extends StatefulWidget {
-  const AddListForm({Key? key}) : super(key: key);
+  final List<ShoppingListModel> items;
+
+  const AddListForm({Key? key, required this.items}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _FormState();
@@ -34,6 +36,12 @@ class _FormState extends State<AddListForm> {
                     value.isEmpty ||
                     value.toLowerCase() == 'shopping lists') {
                   return 'invalid input';
+                }
+
+                for (ShoppingListModel item in widget.items) {
+                  if (item.name == value) {
+                    return 'List already exists';
+                  }
                 }
 
                 listName = value;
