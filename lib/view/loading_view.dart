@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class LoadingScreen extends StatefulWidget {
-  const LoadingScreen({Key? key}) : super(key: key);
+class LoadingView extends StatefulWidget {
+  const LoadingView({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _LoadingState();
 }
 
-class _LoadingState extends State<LoadingScreen> {
+class _LoadingState extends State<LoadingView> {
   @override
   Widget build(BuildContext context) {
     return Column(
