@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shopping_list/form/add_from_template_form.dart';
 import 'package:shopping_list/form/add_list_form.dart';
 import 'package:shopping_list/form/edit_list_form.dart';
 import 'package:shopping_list/model/shopping_list.dart';
@@ -147,20 +148,31 @@ class _HomeScreenState extends State<HomeScreen> {
             return Scaffold(
               appBar: AppBar(
                 title: const Text('My shopping list'),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    tooltip: 'Add new list',
-                    onPressed: () {
-                      _awaitAddFormResult(context, snapshot);
-                    },
-                  ),
-                ],
               ),
               drawer: Drawer(
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: drawerContent(snapshot),
+                ),
+              ),
+
+              body: Center(
+                child: ListView(
+                  children: [
+                    ElevatedButton(
+                      child: const Text('Add new List'),
+                      onPressed: () {
+                        _awaitAddFormResult(context, snapshot);
+                      },
+                    ),
+
+                    ElevatedButton(
+                      child: const Text('Add List from template'),
+                      onPressed: () {
+                        _awaitTemplateFormResult(snapshot);
+                      },
+                    ),
+                  ],
                 ),
               ),
             );
@@ -194,6 +206,21 @@ class _HomeScreenState extends State<HomeScreen> {
     final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => EditListForm(items: snapshot.data)));
     setState(() {
       renameList(result, item, snapshot);
+      saveItem(snapshot);
+    });
+  }
+
+  void _awaitTemplateFormResult(AsyncSnapshot snapshot) async {
+    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddFromTemplateForm()));
+
+    for (ShoppingListModel item in snapshot.data) {
+      if (item.name == result.name)  {
+        return;
+      }
+    }
+
+    setState(() {
+      snapshot.data.add(result);
       saveItem(snapshot);
     });
   }
