@@ -3,12 +3,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shopping_list/form/add_from_template_form.dart';
 import 'package:shopping_list/form/add_list_form.dart';
 import 'package:shopping_list/form/edit_list_form.dart';
 import 'package:shopping_list/model/shopping_list.dart';
 import 'package:shopping_list/view/shopping_list_view.dart';
 import 'package:shopping_list/view/loading_view.dart';
-import 'package:shopping_list/view/settings_view.dart';
 
 class ShoppingListTile extends StatelessWidget {
   final String title;
@@ -96,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.blue,
         ),
         child: Text(
-          'My shopping list',
+          'Select List',
           style: TextStyle(
             color: Colors.white,
             fontSize: 24,
@@ -129,12 +129,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    result.add(const ShoppingListTile(
-      title: 'Settings',
-      route: SettingsView(),
-      icon: Icon(Icons.settings),
-    ));
-
     return result;
   }
 
@@ -147,20 +141,31 @@ class _HomeScreenState extends State<HomeScreen> {
             return Scaffold(
               appBar: AppBar(
                 title: const Text('My shopping list'),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    tooltip: 'Add new list',
-                    onPressed: () {
-                      _awaitAddFormResult(context, snapshot);
-                    },
-                  ),
-                ],
               ),
               drawer: Drawer(
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: drawerContent(snapshot),
+                ),
+              ),
+
+              body: Center(
+                child: ListView(
+                  children: [
+                    ElevatedButton(
+                      child: const Text('Add new List'),
+                      onPressed: () {
+                        _awaitAddFormResult(context, snapshot);
+                      },
+                    ),
+
+                    ElevatedButton(
+                      child: const Text('Add List from template'),
+                      onPressed: () {
+                        _awaitTemplateFormResult(snapshot);
+                      },
+                    ),
+                  ],
                 ),
               ),
             );
@@ -178,6 +183,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final result = await Navigator.push(
         context, MaterialPageRoute(builder: (context) => AddListForm(items: snapshot.data)));
 
+    if(result == null) {
+      return;
+    }
+
     for (ShoppingListModel item in snapshot.data) {
       if (item.name == result.name)  {
         return;
@@ -194,6 +203,34 @@ class _HomeScreenState extends State<HomeScreen> {
     final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => EditListForm(items: snapshot.data)));
     setState(() {
       renameList(result, item, snapshot);
+      saveItem(snapshot);
+    });
+  }
+
+  void _awaitTemplateFormResult(AsyncSnapshot snapshot) async {
+    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddFromTemplateForm()));
+
+    if(result == null) {
+      return;
+    }
+
+    for (ShoppingListModel item in snapshot.data) {
+      if (item.name == result)  {
+        return;
+      }
+    }
+
+    Directory dir = await getApplicationDocumentsDirectory();
+    String path = dir.path;
+
+    File templateFile = File('$path/templates/' + result + '.json');
+
+    if (templateFile.existsSync()) {
+      templateFile.copy('$path/' + result + '.json');
+    }
+
+    setState(() {
+      snapshot.data.add(ShoppingListModel(result));
       saveItem(snapshot);
     });
   }

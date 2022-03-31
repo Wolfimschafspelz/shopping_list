@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shopping_list/model/shopping_item.dart';
+import 'package:shopping_list/model/shopping_list.dart';
 import 'shopping_item_widget.dart';
 import 'package:shopping_list/view/loading_view.dart';
 import 'package:path_provider/path_provider.dart';
@@ -56,10 +57,21 @@ class _ShoppingListViewState extends State<ShoppingListView> {
   }
 
   void saveAsTemplate(List<ShoppingItem> items) async {
+    //create json file to store lists content as template
     Directory dir = await getApplicationDocumentsDirectory();
     String path = dir.path + '/templates';
     File template = await File('$path/' + widget.name + '.json').create(recursive: true);
 
+    //update templates.json
+    path = dir.path;
+    File templates = await File('$path/templates.json').create(recursive: true);
+    String contents = await templates.readAsString(encoding: utf8);
+    List<Map<String, dynamic>> toEncodeTemplate = (contents.isEmpty) ? [] : jsonDecode(contents).cast<Map<String, dynamic>>();
+    toEncodeTemplate.add(ShoppingListModel(widget.name).toJson());
+    templates.writeAsString(json.encode(toEncodeTemplate));
+
+
+    //fill template's json file with list's elements
     List<Map<String, dynamic>> toEncode = [];
     for (var item in items) {
       toEncode.add(item.toJson());
@@ -120,7 +132,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                                 });
                                 saveList(snapshot.data);
                               },
-                              child: const Text('-')),
+                              child: const Icon(Icons.remove)),
                           Flexible(
                             child: TextField(
                               showCursor: true,
@@ -150,7 +162,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                                 });
                                 saveList(snapshot.data);
                               },
-                              child: const Text('+')),
+                              child: const Icon(Icons.add)),
                         ],
                       ),
                     ),
