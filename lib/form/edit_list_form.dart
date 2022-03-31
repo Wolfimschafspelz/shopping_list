@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shopping_list/model/list_model.dart';
+import 'package:shopping_list/model/shopping_list.dart';
 
 class EditListForm extends StatefulWidget {
   final List<ShoppingListModel> items;

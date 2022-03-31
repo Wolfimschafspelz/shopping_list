@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shopping_list/form/add_list_form.dart';
 import 'package:shopping_list/form/edit_list_form.dart';
-import 'package:shopping_list/model/list_model.dart';
+import 'package:shopping_list/model/shopping_list.dart';
 import 'package:shopping_list/view/shopping_list_view.dart';
 import 'package:shopping_list/view/loading_view.dart';
 import 'package:shopping_list/view/settings_view.dart';
@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
       result.add(
         ShoppingListTile(
           title: item.name,
-          route: ShoppingListPage(
+          route: ShoppingListView(
             name: item.name,
           ),
 
@@ -167,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
           } else {
             return const Scaffold(
               body: Center(
-                child: LoadingScreen(),
+                child: LoadingView(),
               ),
             );
           }
