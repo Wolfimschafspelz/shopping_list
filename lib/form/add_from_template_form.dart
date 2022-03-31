@@ -14,7 +14,9 @@ class TemplateTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(title),
-      onTap: () {},
+      onTap: () {
+        Navigator.pop(context, title);
+      },
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -44,7 +46,15 @@ class _FormState extends State<AddFromTemplateForm> {
 
     File jsonFile = File('$path/templates.json');
 
+    if (!jsonFile.existsSync()) {
+      return [];
+    }
+
     String contents = await jsonFile.readAsString(encoding: utf8);
+
+    if (contents.isEmpty) {
+      return [];
+    }
 
     final parsed = jsonDecode(contents).cast<Map<String, dynamic>>();
 
