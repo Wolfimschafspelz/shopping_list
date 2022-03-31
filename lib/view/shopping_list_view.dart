@@ -59,25 +59,23 @@ class _ShoppingListViewState extends State<ShoppingListView> {
   void saveAsTemplate(List<ShoppingItem> items) async {
     //create json file to store lists content as template
     Directory dir = await getApplicationDocumentsDirectory();
-    String path = dir.path + '/templates';
-    File template = await File('$path/' + widget.name + '.json').create(recursive: true);
+    String path = dir.path;
+    File jsonFile = File('$path/' + widget.name + '.json');
+
+    jsonFile.copy('$path/templates/' + widget.name + '.json');
 
     //update templates.json
-    path = dir.path;
     File templates = await File('$path/templates.json').create(recursive: true);
     String contents = await templates.readAsString(encoding: utf8);
     List<Map<String, dynamic>> toEncodeTemplate = (contents.isEmpty) ? [] : jsonDecode(contents).cast<Map<String, dynamic>>();
+
+    for (var item in toEncodeTemplate) {
+      if(item['name'] == widget.name) {
+        return;
+      }
+    }
     toEncodeTemplate.add(ShoppingListModel(widget.name).toJson());
     templates.writeAsString(json.encode(toEncodeTemplate));
-
-
-    //fill template's json file with list's elements
-    List<Map<String, dynamic>> toEncode = [];
-    for (var item in items) {
-      toEncode.add(item.toJson());
-    }
-
-    template.writeAsString(json.encode(toEncode));
   }
 
   @override

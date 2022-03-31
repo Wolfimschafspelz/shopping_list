@@ -8,7 +8,8 @@ import 'package:shopping_list/view/loading_view.dart';
 
 class TemplateTile extends StatelessWidget {
   final String title;
-  const TemplateTile({Key? key, required this.title}) : super(key: key);
+  final List<IconButton> trailingButtons;
+  const TemplateTile({Key? key, required this.title, required this.trailingButtons}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +20,7 @@ class TemplateTile extends StatelessWidget {
       },
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-              onPressed: () {}, icon: const Icon(Icons.edit)
-          ),
-          IconButton(
-              onPressed: () {}, icon: const Icon(Icons.delete)),
-        ],
+        children: trailingButtons,
       ),
     );
   }
@@ -65,10 +60,38 @@ class _FormState extends State<AddFromTemplateForm> {
     List<TemplateTile> result = [];
 
     for(ShoppingListModel item in snapshot.data) {
-      result.add(TemplateTile(title: item.name));
+      result.add(TemplateTile(title: item.name, trailingButtons: [
+        IconButton(
+          onPressed: () {}, icon: const Icon(Icons.edit)
+        ),
+        IconButton(
+            onPressed: () {
+              setState(() {
+                deleteTemplate(item.name, snapshot);
+              });
+            }, icon: const Icon(Icons.delete)),
+      ],));
     }
 
     return result;
+  }
+
+  void deleteTemplate(String title, AsyncSnapshot snapshot) async {
+    snapshot.data.removeWhere((item) => item.name == title);
+
+    //remove template's json file
+    Directory dir = await getApplicationDocumentsDirectory();
+    String path = dir.path;
+    File jsonFile = File('$path/templates/' + title + '.json');
+    jsonFile.deleteSync(recursive: false);
+
+    jsonFile = File('$path/templates.json');
+
+    List<Map<String, dynamic>> toEncode = [];
+    for (var item in snapshot.data) {
+      toEncode.add(item.toJson());
+    }
+    jsonFile.writeAsString(json.encode(toEncode));
   }
 
   @override
