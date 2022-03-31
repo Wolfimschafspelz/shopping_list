@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shopping_list/form/edit_list_form.dart';
 import 'package:shopping_list/model/shopping_list.dart';
 import 'package:shopping_list/view/loading_view.dart';
 
@@ -36,10 +37,7 @@ class AddFromTemplateForm extends StatefulWidget {
 class _FormState extends State<AddFromTemplateForm> {
 
   Future<List<ShoppingListModel>> readTemplates() async {
-    Directory directory = await getApplicationDocumentsDirectory();
-    String path = directory.path;
-
-    File jsonFile = File('$path/templates.json');
+    File jsonFile = await openJsonFile();
 
     if (!jsonFile.existsSync()) {
       return [];
@@ -62,7 +60,11 @@ class _FormState extends State<AddFromTemplateForm> {
     for(ShoppingListModel item in snapshot.data) {
       result.add(TemplateTile(title: item.name, trailingButtons: [
         IconButton(
-          onPressed: () {}, icon: const Icon(Icons.edit)
+          onPressed: () {
+            setState(() {
+              _awaitRenameFormResult(context, snapshot, item);
+            });
+          }, icon: const Icon(Icons.edit)
         ),
         IconButton(
             onPressed: () {
@@ -76,6 +78,44 @@ class _FormState extends State<AddFromTemplateForm> {
     return result;
   }
 
+  void renameTemplate(String name, ShoppingListModel item, AsyncSnapshot snapshot) async {
+    Directory dir = await getApplicationDocumentsDirectory();
+    String path = dir.path;
+    String fileName = item.name.replaceAll(RegExp('\\s+'), '_');
+    File jsonFile = File('$path/templates/' + fileName + '.json');
+    if(jsonFile.existsSync()) {
+      fileName = name.replaceAll(RegExp('\\s+'), '_');
+      jsonFile.rename('$path/templates/' + fileName + '.json');
+    }
+    snapshot.data.remove(item);
+    snapshot.data.add(ShoppingListModel(name));
+  }
+
+  void _awaitRenameFormResult(BuildContext context, AsyncSnapshot snapshot, ShoppingListModel item) async {
+    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => EditListForm(items: snapshot.data)));
+
+      setState(() {
+        renameTemplate(result, item, snapshot);
+        saveItems(snapshot);
+      });
+  }
+
+  void saveItems(AsyncSnapshot snapshot) async {
+    File jsonFile = await openJsonFile();
+    List<Map<String, dynamic>> toEncode = [];
+    for (var item in snapshot.data) {
+      toEncode.add(item.toJson());
+    }
+    jsonFile.writeAsString(json.encode(toEncode));
+  }
+
+  Future<File> openJsonFile() async {
+    Directory dir = await getApplicationDocumentsDirectory();
+    String path = dir.path;
+    File jsonFile = File('$path/templates.json');
+    return jsonFile;
+  }
+
   void deleteTemplate(String title, AsyncSnapshot snapshot) async {
     snapshot.data.removeWhere((item) => item.name == title);
 
@@ -83,15 +123,11 @@ class _FormState extends State<AddFromTemplateForm> {
     Directory dir = await getApplicationDocumentsDirectory();
     String path = dir.path;
     File jsonFile = File('$path/templates/' + title + '.json');
-    jsonFile.deleteSync(recursive: false);
-
-    jsonFile = File('$path/templates.json');
-
-    List<Map<String, dynamic>> toEncode = [];
-    for (var item in snapshot.data) {
-      toEncode.add(item.toJson());
+    if (jsonFile.existsSync()) {
+      jsonFile.deleteSync(recursive: false);
     }
-    jsonFile.writeAsString(json.encode(toEncode));
+
+    saveItems(snapshot);
   }
 
   @override
