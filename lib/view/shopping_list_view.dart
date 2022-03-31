@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shopping_list/shopping_list.dart';
+import 'package:shopping_list/view/shopping_list_widget.dart';
 
 class ShoppingListPage extends StatefulWidget {
   final String name;
@@ -18,7 +18,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
       ),
 
       body: Center(
-        child: ShoppingListView(listName: widget.name),
+        child: ShoppingListWidget(listName: widget.name),
       ),
     );
   }

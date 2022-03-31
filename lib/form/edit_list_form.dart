@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:shopping_list/list_model.dart';
+import 'package:shopping_list/model/list_model.dart';
 
-class AddListForm extends StatefulWidget {
+class EditListForm extends StatefulWidget {
   final List<ShoppingListModel> items;
 
-  const AddListForm({Key? key, required this.items}) : super(key: key);
+  const EditListForm({Key? key, required this.items}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _FormState();
 }
 
-class _FormState extends State<AddListForm> {
+class _FormState extends State<EditListForm> {
   bool changed = false;
   final _formKey = GlobalKey<FormState>();
   final textController = TextEditingController();
@@ -20,7 +20,7 @@ class _FormState extends State<AddListForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add a new list'),
+        title: const Text('Edit list'),
       ),
       body: Form(
         key: _formKey,
@@ -52,13 +52,7 @@ class _FormState extends State<AddListForm> {
               onPressed: () {
                 // Validate returns true if the form is valid, or false otherwise.
                 if (_formKey.currentState!.validate()) {
-                  ShoppingListModel toInsert = ShoppingListModel(listName!);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('added ' + listName!)),
-                  );
-
-                  Navigator.pop(context, toInsert);
+                  Navigator.pop(context, listName);
                 }
               },
               child: const Text('Submit'),

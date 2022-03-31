@@ -3,12 +3,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shopping_list/add_list_form.dart';
-import 'package:shopping_list/edit_list_form.dart';
-import 'package:shopping_list/list_model.dart';
-import 'package:shopping_list/list_page.dart';
-import 'package:shopping_list/loading_screen.dart';
-import 'package:shopping_list/settings_view.dart';
+import 'package:shopping_list/form/add_list_form.dart';
+import 'package:shopping_list/form/edit_list_form.dart';
+import 'package:shopping_list/model/list_model.dart';
+import 'package:shopping_list/view/shopping_list_view.dart';
+import 'package:shopping_list/view/loading_view.dart';
+import 'package:shopping_list/view/settings_view.dart';
 
 class ShoppingListTile extends StatelessWidget {
   final String title;

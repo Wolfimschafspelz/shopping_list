@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:shopping_list/loading_screen.dart';
-import 'shopping_item.dart';
+import 'package:shopping_list/view/loading_view.dart';
+import '../model/shopping_item.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:convert';
 
-class ShoppingItemView extends StatefulWidget {
+class ShoppingItemWidget extends StatefulWidget {
   final ShoppingItem item;
 
-  const ShoppingItemView({Key? key, required this.item}) : super(key: key);
+  const ShoppingItemWidget({Key? key, required this.item}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ItemViewState();
 }
 
-class _ItemViewState extends State<ShoppingItemView> {
+class _ItemViewState extends State<ShoppingItemWidget> {
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -33,16 +33,16 @@ class _ItemViewState extends State<ShoppingItemView> {
   }
 }
 
-class ShoppingListView extends StatefulWidget {
+class ShoppingListWidget extends StatefulWidget {
   final String listName;
 
-  const ShoppingListView({Key? key, required this.listName}) : super(key: key);
+  const ShoppingListWidget({Key? key, required this.listName}) : super(key: key);
 
   @override
-  State<ShoppingListView> createState() => _ShoppingListViewState();
+  State<ShoppingListWidget> createState() => _ShoppingListWidgetState();
 }
 
-class _ShoppingListViewState extends State<ShoppingListView> {
+class _ShoppingListWidgetState extends State<ShoppingListWidget> {
 
   Future<File> openJsonFile() async {
     Directory dir = await getApplicationDocumentsDirectory();
@@ -98,7 +98,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                       shrinkWrap: true,
                       scrollDirection: Axis.vertical,
                       itemBuilder: (BuildContext context, index) {
-                        return ShoppingItemView(item: snapshot.data[index]);
+                        return ShoppingItemWidget(item: snapshot.data[index]);
                       },
                     ),
                   ),

@@ -9,8 +9,14 @@ class SettingsView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Settings'),
       ),
-      body: const Center(
-        child: Text('To be implemented...'),
+      body: Center(
+        child: ListView(
+          children: const [
+            ListTile(
+              title: Text('Templates'),
+            ),
+          ],
+        ),
       ),
     );
   }
