@@ -62,12 +62,7 @@ class _ShoppingListViewState extends State<ShoppingListView> {
     String path = dir.path;
     File jsonFile = File('$path/' + widget.name + '.json');
 
-    if(jsonFile.existsSync()) {
-      jsonFile.copy('$path/templates/' + widget.name + '.json');
-    }
-    else {
-      File('$path/templates/' + widget.name + '.json').create(recursive: true);
-    }
+    jsonFile.copy('$path/templates/' + widget.name + '.json');
 
     //update templates.json
     File templates = await File('$path/templates.json').create(recursive: true);
