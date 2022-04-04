@@ -52,7 +52,7 @@ class _FormState extends State<AddListForm> {
               onPressed: () {
                 // Validate returns true if the form is valid, or false otherwise.
                 if (_formKey.currentState!.validate()) {
-                  ShoppingListModel toInsert = ShoppingListModel(listName!);
+                  ShoppingListModel toInsert = ShoppingListModel(listName!, []);
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('added ' + listName!)),
