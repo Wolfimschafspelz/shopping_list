@@ -36,18 +36,12 @@ class _ShoppingListViewState extends State<ShoppingListView> {
     return File('$path/shopping_lists.json').create(recursive: true);
   }
 
-  Future<File> get _templateFile async {
-    String path = await _localPath;
-    return File('$path/templates.json').create(recursive: true);
-  }
-
   void saveList() async {
     File jsonFile = await _localFile;
 
     String contents = jsonFile.readAsStringSync();
 
-    final toEncode =
-        contents.isEmpty ? [] : jsonDecode(contents);
+    final toEncode = contents.isEmpty ? [] : jsonDecode(contents);
 
     toEncode.removeWhere((element) => element['name'] == list.name);
 
@@ -55,12 +49,19 @@ class _ShoppingListViewState extends State<ShoppingListView> {
     jsonFile.writeAsString(json.encode(toEncode));
   }
 
+  Future<File> get _templateFile async {
+    String path = await _localPath;
+    return File('$path/templates.json').create(recursive: true);
+  }
+
   void saveAsTemplate() async {
     File templates = await _templateFile; //open templates.json
     String contents = await templates.readAsString(encoding: utf8);
 
     //get data to store in file
-    final toEncode = (contents.isEmpty) ? [] : jsonDecode(contents).cast<Map<String, dynamic>>();
+    final toEncode = (contents.isEmpty)
+        ? []
+        : jsonDecode(contents).cast<Map<String, dynamic>>();
 
     //update current template
     toEncode.removeWhere((element) => element['name'] == list.name);
@@ -74,10 +75,6 @@ class _ShoppingListViewState extends State<ShoppingListView> {
     return Scaffold(
         appBar: AppBar(
           title: Text(list.name),
-          /*leading: BackButton(onPressed: (){
-            saveList();
-          }),*/
-
           actions: [
             IconButton(
               icon: const Icon(Icons.save),
@@ -100,7 +97,8 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                     shrinkWrap: true,
                     scrollDirection: Axis.vertical,
                     itemBuilder: (BuildContext context, index) {
-                      return ShoppingItemWidget(item: list.items[index]);
+                      return ShoppingItemWidget(
+                          item: list.items[index], saveFunction: saveList);
                     },
                   ),
                 ),
@@ -157,11 +155,5 @@ class _ShoppingListViewState extends State<ShoppingListView> {
             ],
           ),
         ));
-  }
-
-  @override
-  void deactivate() {
-    saveList();
-    super.deactivate();
   }
 }

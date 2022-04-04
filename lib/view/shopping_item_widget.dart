@@ -3,8 +3,9 @@ import 'package:shopping_list/model/shopping_item.dart';
 
 class ShoppingItemWidget extends StatefulWidget {
   final ShoppingItem item;
+  final VoidCallback saveFunction;
 
-  const ShoppingItemWidget({Key? key, required this.item}) : super(key: key);
+  const ShoppingItemWidget({Key? key, required this.item, required this.saveFunction}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ItemWidgetState();
@@ -20,6 +21,7 @@ class _ItemWidgetState extends State<ShoppingItemWidget> {
             onChanged: (bool? state) {
               setState(() {
                 widget.item.bought = state;
+                widget.saveFunction();
               });
             }),
 
