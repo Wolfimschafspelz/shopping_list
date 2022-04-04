@@ -8,16 +8,16 @@ import 'package:shopping_list/model/shopping_list.dart';
 import 'package:shopping_list/view/loading_view.dart';
 
 class TemplateTile extends StatelessWidget {
-  final String title;
+  final ShoppingListModel list;
   final List<IconButton> trailingButtons;
-  const TemplateTile({Key? key, required this.title, required this.trailingButtons}) : super(key: key);
+  const TemplateTile({Key? key, required this.list, required this.trailingButtons}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(title),
+      title: Text(list.name),
       onTap: () {
-        Navigator.pop(context, title);
+        Navigator.pop(context, list);
       },
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -58,7 +58,7 @@ class _FormState extends State<AddFromTemplateForm> {
     List<TemplateTile> result = [];
 
     for(ShoppingListModel item in snapshot.data) {
-      result.add(TemplateTile(title: item.name, trailingButtons: [
+      result.add(TemplateTile(list: item, trailingButtons: [
         IconButton(
           onPressed: () {
             setState(() {
@@ -79,16 +79,8 @@ class _FormState extends State<AddFromTemplateForm> {
   }
 
   void renameTemplate(String name, ShoppingListModel item, AsyncSnapshot snapshot) async {
-    Directory dir = await getApplicationDocumentsDirectory();
-    String path = dir.path;
-    String fileName = item.name.replaceAll(RegExp('\\s+'), '_');
-    File jsonFile = File('$path/templates/' + fileName + '.json');
-    if(jsonFile.existsSync()) {
-      fileName = name.replaceAll(RegExp('\\s+'), '_');
-      jsonFile.rename('$path/templates/' + fileName + '.json');
-    }
     snapshot.data.remove(item);
-    snapshot.data.add(ShoppingListModel(name));
+    snapshot.data.add(ShoppingListModel(name, item.items));
   }
 
   void _awaitRenameFormResult(BuildContext context, AsyncSnapshot snapshot, ShoppingListModel item) async {

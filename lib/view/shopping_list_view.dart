@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:shopping_list/model/shopping_item.dart';
 import 'package:shopping_list/model/shopping_list.dart';
 import 'shopping_item_widget.dart';
-import 'package:shopping_list/view/loading_view.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:convert';
 
 class ShoppingListView extends StatefulWidget {
-  final String name;
+  final ShoppingListModel initialList;
 
-  const ShoppingListView({Key? key, required this.name}) : super(key: key);
+  const ShoppingListView({Key? key, required this.initialList})
+      : super(key: key);
 
   @override
   State<ShoppingListView> createState() => _ShoppingListViewState();
@@ -18,159 +18,140 @@ class ShoppingListView extends StatefulWidget {
 
 class _ShoppingListViewState extends State<ShoppingListView> {
   String itemName = '';
+  late ShoppingListModel list;
 
-  Future<File> openJsonFile() async {
+  @override
+  initState() {
+    list = widget.initialList;
+    super.initState();
+  }
+
+  Future<String> get _localPath async {
     Directory dir = await getApplicationDocumentsDirectory();
-    String path = dir.path;
-
-    String fileName = widget.name.replaceAll(RegExp('\\s+'), '_');
-
-    return File('$path/$fileName.json').create(recursive: true);
+    return dir.path;
   }
 
-  List<ShoppingItem> getItems(String jsonContents) {
-    if (jsonContents.isEmpty) {
-      return [];
-    }
-
-    final parsed = jsonDecode(jsonContents).cast<Map<String, dynamic>>();
-
-    return parsed
-        .map<ShoppingItem>((json) => ShoppingItem.fromJson(json))
-        .toList();
+  Future<File> get _localFile async {
+    String path = await _localPath;
+    return File('$path/shopping_lists.json').create(recursive: true);
   }
 
-  Future<List<ShoppingItem>> readJson() async {
-    File jsonFile = await openJsonFile();
-    String contents = await jsonFile.readAsString(encoding: utf8);
-
-    return getItems(contents);
+  Future<File> get _templateFile async {
+    String path = await _localPath;
+    return File('$path/templates.json').create(recursive: true);
   }
 
-  void saveList(List<ShoppingItem> items) async {
-    File jsonFile = await openJsonFile();
-    List<Map<String, dynamic>> toEncode = [];
-    for (var item in items) {
-      toEncode.add(item.toJson());
-    }
+  void saveList() async {
+    File jsonFile = await _localFile;
+
+    String contents = jsonFile.readAsStringSync();
+
+    final toEncode =
+        contents.isEmpty ? [] : jsonDecode(contents);
+
+    toEncode.removeWhere((element) => element['name'] == list.name);
+
+    toEncode.add(list.toJson());
     jsonFile.writeAsString(json.encode(toEncode));
   }
 
-  void saveAsTemplate(List<ShoppingItem> items) async {
-    //create json file to store lists content as template
-    Directory dir = await getApplicationDocumentsDirectory();
-    String path = dir.path;
-    File jsonFile = File('$path/' + widget.name + '.json');
-
-    jsonFile.copy('$path/templates/' + widget.name + '.json');
-
-    //update templates.json
-    File templates = await File('$path/templates.json').create(recursive: true);
+  void saveAsTemplate() async {
+    File templates = await _templateFile; //open templates.json
     String contents = await templates.readAsString(encoding: utf8);
-    List<Map<String, dynamic>> toEncodeTemplate = (contents.isEmpty) ? [] : jsonDecode(contents).cast<Map<String, dynamic>>();
 
-    for (var item in toEncodeTemplate) {
-      if(item['name'] == widget.name) {
-        return;
-      }
-    }
-    toEncodeTemplate.add(ShoppingListModel(widget.name).toJson());
-    templates.writeAsString(json.encode(toEncodeTemplate));
+    //get data to store in file
+    final toEncode = (contents.isEmpty) ? [] : jsonDecode(contents).cast<Map<String, dynamic>>();
+
+    //update current template
+    toEncode.removeWhere((element) => element['name'] == list.name);
+    toEncode.add(list.toJson());
+
+    templates.writeAsString(json.encode(toEncode)); //save result
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: readJson(),
-      builder: (BuildContext context, AsyncSnapshot snapshot) {
-        if (snapshot.hasData) {
-          return Scaffold(
-              appBar: AppBar(
-                title: Text(widget.name),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.save),
-                    tooltip: 'Save as template',
-                    onPressed: () {
-                      saveAsTemplate(snapshot.data);
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(list.name),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.save),
+              tooltip: 'Save as template',
+              onPressed: () {
+                saveAsTemplate();
+              },
+            ),
+          ],
+        ),
+        body: Center(
+          child: Stack(
+            children: [
+              Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints.expand(),
+                  child: ListView.builder(
+                    itemCount: list.items.length,
+                    shrinkWrap: true,
+                    scrollDirection: Axis.vertical,
+                    itemBuilder: (BuildContext context, index) {
+                      return ShoppingItemWidget(item: list.items[index]);
                     },
                   ),
-                ],
+                ),
               ),
-              body: Center(
-                child: Stack(
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Row(
                   children: [
-                    Align(
-                      alignment: Alignment.topCenter,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints.expand(),
-                        child: ListView.builder(
-                          itemCount: snapshot.data.length,
-                          shrinkWrap: true,
-                          scrollDirection: Axis.vertical,
-                          itemBuilder: (BuildContext context, index) {
-                            return ShoppingItemWidget(
-                                item: snapshot.data[index]);
-                          },
+                    ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
                         ),
+                        onPressed: () {
+                          setState(() {
+                            list.items.removeWhere(
+                                (element) => element.bought == true);
+                          });
+                          saveList();
+                        },
+                        child: const Icon(Icons.remove)),
+                    Flexible(
+                      child: TextField(
+                        showCursor: true,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                          labelText: 'item name',
+                        ),
+                        onChanged: (String value) {
+                          itemName = value;
+                        },
                       ),
                     ),
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Row(
-                        children: [
-                          ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                shape: const CircleBorder(),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  snapshot.data.removeWhere(
-                                      (element) => element.bought == true);
-                                });
-                                saveList(snapshot.data);
-                              },
-                              child: const Icon(Icons.remove)),
-                          Flexible(
-                            child: TextField(
-                              showCursor: true,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                                labelText: 'item name',
-                              ),
-                              onChanged: (String value) {
-                                itemName = value;
-                              },
-                            ),
-                          ),
-                          ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                shape: const CircleBorder(),
-                              ),
-                              onPressed: () {
-                                if (itemName == '') {
-                                  return;
-                                }
+                    ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                        ),
+                        onPressed: () {
+                          if (itemName == '') {
+                            return;
+                          }
 
-                                setState(() {
-                                  ShoppingItem toInsert =
-                                      ShoppingItem(false, itemName, null);
-                                  snapshot.data.add(toInsert);
-                                });
-                                saveList(snapshot.data);
-                              },
-                              child: const Icon(Icons.add)),
-                        ],
-                      ),
-                    ),
+                          setState(() {
+                            ShoppingItem toInsert =
+                                ShoppingItem(false, itemName, null);
+                            list.items.add(toInsert);
+                          });
+                          saveList();
+                        },
+                        child: const Icon(Icons.add)),
                   ],
                 ),
-              ));
-        } else {
-          return const LoadingView();
-        }
-      },
-    );
+              ),
+            ],
+          ),
+        ));
   }
 }
