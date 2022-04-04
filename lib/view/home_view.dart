@@ -51,11 +51,60 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Future<File> openJsonFile() async {
-    Directory dir = await getApplicationDocumentsDirectory();
-    String path = dir.path;
+  void _awaitAddFormResult(BuildContext context, AsyncSnapshot snapshot) async {
+    final result = await Navigator.push(
+        context, MaterialPageRoute(builder: (context) => AddListForm(items: snapshot.data)));
 
-    return File('$path/shopping_lists.json').create(recursive: true);
+    if(result == null) {
+      return;
+    }
+
+    for (ShoppingListModel item in snapshot.data) {
+      if (item.name == result.name)  {
+        return;
+      }
+    }
+
+    setState(() {
+      snapshot.data.add(result);
+      saveItem(snapshot);
+    });
+  }
+
+  void renameList(String name, ShoppingListModel item, AsyncSnapshot snapshot) async {
+    snapshot.data.remove(item);
+    snapshot.data.add(ShoppingListModel(name, item.items));
+  }
+
+  void _awaitRenameFormResult(BuildContext context, AsyncSnapshot snapshot, ShoppingListModel item) async {
+    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => EditListForm(items: snapshot.data)));
+    setState(() {
+      renameList(result, item, snapshot);
+      saveItem(snapshot);
+    });
+  }
+
+  void deleteList(ShoppingListModel item, AsyncSnapshot snapshot) async {
+    snapshot.data.remove(item);
+  }
+
+  void _awaitTemplateFormResult(AsyncSnapshot snapshot) async {
+    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddFromTemplateForm()));
+
+    if(result == null) {
+      return;
+    }
+
+    for (ShoppingListModel item in snapshot.data) {
+      if (item.name == result.name)  {
+        return;
+      }
+    }
+
+    setState(() {
+      snapshot.data.add(result);
+      saveItem(snapshot);
+    });
   }
 
   List<ShoppingListModel> getItems(String jsonContents) {
@@ -63,22 +112,30 @@ class _HomeScreenState extends State<HomeScreen> {
       return [];
     }
 
-    final parsed = jsonDecode(jsonContents).cast<Map<String, dynamic>>();
+    final parsed = jsonDecode(jsonContents);
 
-    return parsed
-        .map<ShoppingListModel>((json) => ShoppingListModel.fromJson(json))
-        .toList();
+    return parsed.map<ShoppingListModel>((json) => ShoppingListModel.fromJson(json)).toList();
   }
 
-  Future<List<ShoppingListModel>> readJson() async {
-    File jsonFile = await openJsonFile();
+  Future<String> get _localPath async {
+    Directory dir = await getApplicationDocumentsDirectory();
+    return dir.path;
+  }
+
+  Future<File> get _localFile async {
+    String path = await _localPath;
+    return File('$path/shopping_lists.json').create(recursive: true);
+  }
+
+  Future<List<ShoppingListModel>> get _shoppingLists async {
+    File jsonFile = await _localFile;
     String contents = await jsonFile.readAsString(encoding: utf8);
 
     return getItems(contents);
   }
 
   void saveItem(AsyncSnapshot snapshot) async {
-    File jsonFile = await openJsonFile();
+    File jsonFile = await _localFile;
 
     List<Map<String, dynamic>> toEncode = [];
     for (var i in snapshot.data) {
@@ -110,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ShoppingListTile(
           title: item.name,
           route: ShoppingListView(
-            name: item.name,
+            initialList: item,
           ),
 
           trailingButtons: [
@@ -135,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: readJson(),
+        future: _shoppingLists,
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
@@ -177,85 +234,5 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
         });
-  }
-
-  void _awaitAddFormResult(BuildContext context, AsyncSnapshot snapshot) async {
-    final result = await Navigator.push(
-        context, MaterialPageRoute(builder: (context) => AddListForm(items: snapshot.data)));
-
-    if(result == null) {
-      return;
-    }
-
-    for (ShoppingListModel item in snapshot.data) {
-      if (item.name == result.name)  {
-        return;
-      }
-    }
-
-    setState(() {
-      snapshot.data.add(result);
-      saveItem(snapshot);
-    });
-  }
-  
-  void _awaitRenameFormResult(BuildContext context, AsyncSnapshot snapshot, ShoppingListModel item) async {
-    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => EditListForm(items: snapshot.data)));
-    setState(() {
-      renameList(result, item, snapshot);
-      saveItem(snapshot);
-    });
-  }
-
-  void _awaitTemplateFormResult(AsyncSnapshot snapshot) async {
-    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddFromTemplateForm()));
-
-    if(result == null) {
-      return;
-    }
-
-    for (ShoppingListModel item in snapshot.data) {
-      if (item.name == result)  {
-        return;
-      }
-    }
-
-    Directory dir = await getApplicationDocumentsDirectory();
-    String path = dir.path;
-
-    File templateFile = File('$path/templates/' + result + '.json');
-
-    if (templateFile.existsSync()) {
-      templateFile.copy('$path/' + result + '.json');
-    }
-
-    setState(() {
-      snapshot.data.add(ShoppingListModel(result));
-      saveItem(snapshot);
-    });
-  }
-
-  void renameList(String name, ShoppingListModel item, AsyncSnapshot snapshot) async {
-    Directory dir = await getApplicationDocumentsDirectory();
-    String path = dir.path;
-    String fileName = item.name.replaceAll(RegExp('\\s+'), '_');
-    File jsonFile = File('$path/' + fileName + '.json');
-    if(jsonFile.existsSync()) {
-      fileName = name.replaceAll(RegExp('\\s+'), '_');
-      jsonFile.rename('$path/' + fileName + '.json');
-    }
-    snapshot.data.remove(item);
-    snapshot.data.add(ShoppingListModel(name));
-  }
-
-  void deleteList(ShoppingListModel item, AsyncSnapshot snapshot) async {
-    Directory dir = await getApplicationDocumentsDirectory();
-    String path = dir.path;
-    String fileName = item.name.replaceAll(RegExp('\\s+'), '_');
-    File jsonFile = File('$path/' + fileName + '.json');
-    if(jsonFile.existsSync()) {
-      jsonFile.deleteSync();
-    }
-    snapshot.data.remove(item);
   }
 }
