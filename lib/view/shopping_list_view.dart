@@ -74,6 +74,10 @@ class _ShoppingListViewState extends State<ShoppingListView> {
     return Scaffold(
         appBar: AppBar(
           title: Text(list.name),
+          /*leading: BackButton(onPressed: (){
+            saveList();
+          }),*/
+
           actions: [
             IconButton(
               icon: const Icon(Icons.save),
@@ -153,5 +157,11 @@ class _ShoppingListViewState extends State<ShoppingListView> {
             ],
           ),
         ));
+  }
+
+  @override
+  void deactivate() {
+    saveList();
+    super.deactivate();
   }
 }
