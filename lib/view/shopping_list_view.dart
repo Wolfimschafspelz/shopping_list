@@ -142,8 +142,9 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                           }
 
                           setState(() {
-                            ShoppingItem toInsert =
-                                ShoppingItem(false, itemName, null);
+                            ShoppingItem toInsert = list.items.firstWhere((element) => element.name == itemName,orElse:  (){return ShoppingItem(false, itemName, 0);});
+                            toInsert.amount++;
+                            list.items.remove(toInsert);
                             list.items.add(toInsert);
                           });
                           saveList();
