@@ -25,7 +25,7 @@ class _ItemWidgetState extends State<ShoppingItemWidget> {
               });
             }),
 
-        Text(widget.item.name),
+        Text(widget.item.name + ' (' + widget.item.amount.toString() + 'x)'),
       ],
     );
   }
