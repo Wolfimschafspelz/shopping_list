@@ -5,6 +5,7 @@ import 'shopping_item_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'package:collection/collection.dart';
 
 class ShoppingListView extends StatefulWidget {
   final ShoppingListModel initialList;
@@ -113,8 +114,12 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                         ),
                         onPressed: () {
                           setState(() {
+                            ShoppingItem? toDecrease = list.items.firstWhereOrNull((element) => element.name == itemName);
+                            if(toDecrease != null) {
+                              toDecrease.amount--;
+                            }
                             list.items.removeWhere(
-                                (element) => element.bought == true);
+                                (element) => element.bought == true || element.amount <= 0);
                           });
                           saveList();
                         },
@@ -142,8 +147,9 @@ class _ShoppingListViewState extends State<ShoppingListView> {
                           }
 
                           setState(() {
-                            ShoppingItem toInsert =
-                                ShoppingItem(false, itemName, null);
+                            ShoppingItem toInsert = list.items.firstWhere((element) => element.name == itemName, orElse:  (){return ShoppingItem(false, itemName, 0);});
+                            toInsert.amount++;
+                            list.items.remove(toInsert);
                             list.items.add(toInsert);
                           });
                           saveList();
